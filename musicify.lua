@@ -248,21 +248,23 @@ end
 local function checkInput()
     local event, key = os.pullEvent("key")
     
-    if key == 208 and selection < #index.songs then
-        if selection - scroll >= screenHeight -3 then
-            scroll = scroll +1
-        end
+    while true do
+        if key == 208 and selection < #index.songs then
+            if selection - scroll >= screenHeight -3 then
+                scroll = scroll +1
+            end
+            
+            selection = selection +1
+        elseif key == 200 and selection > 0 then
+            if selection - scroll <= 1 and scroll > 0 then
+                scroll = scroll -1
+            end
         
-        selection = selection +1
-    elseif key == 200 and selection > 0 then
-        if selection - scroll <= 1 and scroll > 0 then
-            scroll = scroll -1
+            selection = selection -1
+        elseif key == 28 then
+            play(index.songs[selection])
+            currentSong = selection
         end
-    
-        selection = selection -1
-    elseif key == 28 then
-        play(index.songs[selection])
-        currentSong = selection
     end
 end
  
@@ -316,9 +318,7 @@ local function drawMusicList()
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
             elseif selection - scroll == i or track == currentSong then
-                if textScroll < str.len(index.songs[track].name) then
-                    term.write(string.sub(index.songs[track].name, textScroll, textScroll + 12) .. '...')
-                end
+                term.write(string.sub(index.songs[track].name, textScroll, textScroll + 12) .. '...')
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
@@ -327,9 +327,7 @@ local function drawMusicList()
             if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
             elseif selection - scroll == i or track == currentSong then
-                if textSroll < string.len(index.songs[track].author) then
-                    term.write(string.sub(index.songs[track].author, textScroll, textScroll + 9) .. '...')
-                end
+                term.write(string.sub(index.songs[track].author, textScroll, textScroll + 9) .. '...')
             else
                 term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
@@ -358,23 +356,21 @@ local function drawFooter()
 end
 
 local function scrollText()
-    coroutine.yield(textScrollSlow)
-    textScroll = textScroll +1
+    while true do
+        textScroll = textScroll +1
 
-    if textScroll > 30 then 
-        textScroll = 0
+        if textScroll > 30 then 
+            textScroll = 0
+        end
     end
 end
  
 local function drawGUI()
-    local timer = coroutine.create(scrollText())
-
     while true do
         drawHeader()
         drawMusicList()
         drawFooter()
-        checkInput()
     end
 end
 
-drawGUI()
+parallel.waitForAny(drawGUI(), scrollText(), checkInput())
