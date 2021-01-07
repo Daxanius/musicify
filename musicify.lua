@@ -9,6 +9,7 @@ local args = {...}
 local musicify = {}
 
 local tape = peripheral.find("tape_drive")
+local screenHeight, screenWidth = term.getSize()
 
 -- BUSINESS LAYER --
 
@@ -196,14 +197,14 @@ end
 command = table.remove(args, 1)
 
 if command == "musicify" then
-    return musicify
+    drawGUI()
 elseif not command then
     print("Please provide a valid command. For usage, use `musicify help`.")
 else
     musicify[command](args)
 end
 
-return musicify
+drawGUI()
 
 -- VISUAL LAYER --
 
@@ -215,7 +216,7 @@ local function drawHeader()
     print(applicationName)
 end
 
-local function drawMusic()
+local function drawMusicList()
     term.setBackgroundColor(color.green)
     term.setTextColor(color.gray)
 
@@ -224,7 +225,7 @@ local function drawMusic()
     term.setTextColor(color.white)
 
     for i in pairs(index.songs) do
-        if i < screenHeight -1 then
+        if i < screenHeight -2 then
             if strlen(index.songs[i].name) < screenWidth -1 then
                 print(index.songs[i].name)
             else
@@ -239,7 +240,7 @@ local function drawFooter()
     term.setTextColor(color.white)
     term.clear()
 
-    term.setCursorPos(screenHeight, 1)
+    term.setCursorPos(screenHeight -1, 1)
 
     -- If this is somehow possible with the tape mod api
     if !tape.isPlaying() then
@@ -247,9 +248,16 @@ local function drawFooter()
     else
         print("Stop")
     end
+
+    term.setCursorPos(screenHeight -1, 6)
+
+    print("Shuffle")
 end
 
 local function drawGUI()
-    drawHeader()
-    drawMusic()
+    while true do
+        drawHeader()
+        drawMusic()
+        drawFooter()
+    end
 end
