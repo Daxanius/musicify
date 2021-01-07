@@ -18,7 +18,11 @@ local playingColor = colors.green
 
 local footerBackGroundColor = colors.white
 local footerTextColor = colors.black
- 
+
+local trackRowPosition = 0
+local songRowPosition = 10
+local authorRowPosition = 20
+
 local args = {...}
 local musicify = {}
  
@@ -260,10 +264,11 @@ local function drawMusicList()
     term.setBackgroundColor(backGroundColor)
     term.setTextColor(tableTextColor)
     
+    term.setCursorPos(trackRowPosition, 2)
     term.write("Track")
-    term.setCursorPos(halfScreen - 14, 2)
+    term.setCursorPos(songRowPosition, 2)
     term.write("Name")
-    term.setCursorPos(halfScreen + 14, 2)
+    term.setCursorPos(authorRowPosition + 14, 2)
     term.write("Author")
  
     term.setTextColor(musicTextColor)
@@ -283,20 +288,21 @@ local function drawMusicList()
                 term.setBackgroundColor(backGroundColor)
             end
             
+            term.setCursorPos(trackRowPosition, i + 2)
             term.write(track)
 
-            term.setCursorPos(halfScreen - 14, i + 2)
+            term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
 
-            term.setCursorPos(halfScreen + 14, i + 2)
-            if string.len(index.songs[track].author) < 10 then
+            term.setCursorPos(authorRowPosition, i + 2)
+            if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
             else 
-                term.write(string.sub(index.songs[track].author, 0, 7) .. '...')
+                term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
         else
             break
