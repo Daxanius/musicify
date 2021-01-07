@@ -226,7 +226,7 @@ end
 command = table.remove(args, 1)
  
 if command == "musicify" then
-    drawGUI()
+    parallel.waitForAny(drawGUI(), scrollText())
 elseif not command then
     print("Please provide a valid command. For usage, use `musicify help`.")
 else
@@ -370,7 +370,8 @@ local function drawGUI()
         drawHeader()
         drawMusicList()
         drawFooter()
+        checkInput()
     end
 end
 
-parallel.waitForAny(drawGUI(), scrollText(), checkInput())
+parallel.waitForAny(drawGUI(), scrollText())
