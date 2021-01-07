@@ -19,9 +19,10 @@ local playingColor = colors.green
 local footerBackGroundColor = colors.white
 local footerTextColor = colors.black
 
-local trackRowPosition = 0
-local songRowPosition = 10
-local authorRowPosition = 40
+local trackRowPosition = 1
+local songRowPosition = 8
+local authorRowPosition = 25
+local timeRowPosition = 40
 
 local args = {...}
 local musicify = {}
@@ -290,6 +291,9 @@ local function drawMusicList()
             
             term.setCursorPos(trackRowPosition, i + 2)
             term.write(track)
+
+            term.setCursorPos(timeRowPosition, i + 2)
+            term.write(index.songs[track].time)
 
             term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
