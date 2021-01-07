@@ -19,10 +19,12 @@ local playingColor = colors.green
 local footerBackGroundColor = colors.white
 local footerTextColor = colors.black
 
-local trackRowPosition = 1
-local songRowPosition = 8
-local authorRowPosition = 25
-local timeRowPosition = 40
+local parentRowPosition = 2
+
+local trackRowPosition = parentRowPosition + 1
+local songRowPosition = parentRowPosition + 8
+local authorRowPosition = parentRowPosition + 25
+local timeRowPosition = parentRowPosition + 40
 
 local args = {...}
 local musicify = {}
@@ -230,13 +232,13 @@ end
  
 -- VISUAL LAYER --
 
-local function secondsToClock(time)
+local function secondsToClock(seconds)
     if seconds <= 0 then
         return "00:00:00";
     else
     mins = string.format("%02.f", math.floor(time/60));
     secs = string.format("%02.f", math.floor(seconds - mins *60));
-    return ..mins..":"..secs
+    return mins..":"..secs
     end
 end
  
