@@ -33,7 +33,7 @@ local tape = peripheral.find("tape_drive")
 local screenWidth, screenHeight = term.getSize()
 local halfScreen = screenWidth / 2
 
-local textScrollSlow = 100
+local textScrollSlow = 500
  
 local currentSong = 0
 local selection = 0
@@ -248,23 +248,21 @@ end
 local function checkInput()
     local event, key = os.pullEvent("key")
     
-    while true do
-        if key == 208 and selection < #index.songs then
-            if selection - scroll >= screenHeight -3 then
-                scroll = scroll +1
-            end
-            
-            selection = selection +1
-        elseif key == 200 and selection > 0 then
-            if selection - scroll <= 1 and scroll > 0 then
-                scroll = scroll -1
-            end
-        
-            selection = selection -1
-        elseif key == 28 then
-            play(index.songs[selection])
-            currentSong = selection
+    if key == 208 and selection < #index.songs then
+        if selection - scroll >= screenHeight -3 then
+            scroll = scroll +1
         end
+        
+        selection = selection +1
+    elseif key == 200 and selection > 0 then
+        if selection - scroll <= 1 and scroll > 0 then
+            scroll = scroll -1
+        end
+    
+        selection = selection -1
+    elseif key == 28 then
+        play(index.songs[selection])
+        currentSong = selection
     end
 end
  
@@ -356,11 +354,17 @@ local function drawFooter()
 end
 
 local function scrollText()
-    while true do
-        textScroll = textScroll +1
+    local timer = 0
 
-        if textScroll > 30 then 
-            textScroll = 0
+    while true do
+        timer = timer +1
+
+        if timer >= textScrollSlow then
+            textScroll = textScroll +1
+
+            if textScroll > 20 then 
+                textScroll = 0
+            end
         end
     end
 end
