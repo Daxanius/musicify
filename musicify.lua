@@ -21,7 +21,7 @@ local footerTextColor = colors.black
 
 local trackRowPosition = 0
 local songRowPosition = 10
-local authorRowPosition = 20
+local authorRowPosition = 40
 
 local args = {...}
 local musicify = {}
@@ -268,7 +268,7 @@ local function drawMusicList()
     term.write("Track")
     term.setCursorPos(songRowPosition, 2)
     term.write("Name")
-    term.setCursorPos(authorRowPosition + 14, 2)
+    term.setCursorPos(authorRowPosition, 2)
     term.write("Author")
  
     term.setTextColor(musicTextColor)
