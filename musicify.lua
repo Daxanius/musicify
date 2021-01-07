@@ -323,9 +323,8 @@ local function drawFooter()
 end
  
 local function drawGUI()
-    drawHeader()
-
     while true do
+        drawHeader()
         drawMusicList()
         drawFooter()
         checkInput()
