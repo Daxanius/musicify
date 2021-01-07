@@ -4,12 +4,27 @@ local indexURL = "https://raw.githubusercontent.com/RubenHetKonijn/computronics-
  
 local applicationName = "Musicify"
 local version = 0.2
+
+local backGroundColor = colors.black
+
+local headerTextColor = colors.green
+local headerOffset = 0
+
+local tableTextColor = colors.yellow
+local musicTextColor = colors.white
+
+local selectedColor = colors.blue
+local playingColor = colors.green
+
+local footerBackGroundColor = colors.white
+local footerTextColor = colors.black
  
 local args = {...}
 local musicify = {}
  
 local tape = peripheral.find("tape_drive")
 local screenWidth, screenHeight = term.getSize()
+local halfScreen = screenWidth / 2
  
 local currentSong = 0
 local selection = 0
@@ -201,9 +216,9 @@ end
 command = table.remove(args, 1)
  
 if command == "musicify" then
-    return musify
+    drawGUI()
 elseif not command then
-    -- print("Please provide a valid command. For usage, use `musicify help`.")
+    print("Please provide a valid command. For usage, use `musicify help`.")
 else
     musicify[command](args)
 end
@@ -232,58 +247,68 @@ local function checkInput()
 end
  
 local function drawHeader()
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.green)
+    term.setBackgroundColor(backGroundColor)
+    term.setTextColor(headerTextColor)
     term.clear()
-    term.setCursorPos((screenWidth / 2) - (string.len(applicationName) / 2),1)
+
+    term.setCursorPos(halfScreen - (string.len(applicationName) / 2) + headerOffset, 1)
  
     print(applicationName)
 end
  
 local function drawMusicList()
-    term.setBackgroundColor(colors.black)
-    term.setTextColor(colors.yellow)
+    term.setBackgroundColor(backGroundColor)
+    term.setTextColor(tableTextColor)
     
     term.write("Track")
-    term.setCursorPos(screenWidth / 2 - 14, 2)
-    term.write("name")
-    term.setCursorPos(screenWidth / 2 + 6, 2)
+    term.setCursorPos(halfScreen - 14, 2)
+    term.write("Name")
+    term.setCursorPos(halfScreen + 14, 2)
     term.write("Author")
  
-    term.setTextColor(colors.white)
+    term.setTextColor(musicTextColor)
  
     for i in pairs(index.songs) do
         if i < screenHeight -2 then
+            local track = i + scroll
+
             term.setCursorPos(1, i +2)
             
             -- Change the color of the selectoins
             if selection - scroll == i then
-                term.setBackgroundColor(colors.blue)
-            elseif i + scroll == currentSong then
-                term.setBackgroundColor(colors.green)
+                term.setBackgroundColor(selectedColor)
+            elseif track == currentSong then
+                term.setBackgroundColor(playingColor)
             else
-                term.setBackgroundColor(colors.black)
+                term.setBackgroundColor(backGroundColor)
             end
             
-            -- if string.len(index.songs[i + scroll].name) < screenWidth then
-                term.write(i + scroll)
-                term.setCursorPos(screenWidth / 2 - 14, i + 2)
-                term.write(index.songs[i + scroll].name)
-                term.setCursorPos(screenWidth / 2 + 6, i + 2)
-                term.write(index.songs[i + scroll].author)
-            -- else
-                -- term.write(string.sub(index.songs[i + scroll].name, 0, screenWidth -4) .. '...')
-            -- end
+            term.write(track)
+
+            term.setCursorPos(halfScreen - 14, i + 2)
+            if string.len(index.songs[track].name) < 15 then
+                term.write(index.songs[track].name)
+            else
+                term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
+            end
+
+            term.setCursorPos(halfScreen + 14, i + 2)
+            if string.len(index.songs[track].author) < 10 then
+                term.write(index.songs[track].author)
+            else 
+                term.write(string.sub(index.songs[track].author, 0, 7) .. '...')
+            end
+        else
+            break
         end
     end
 end
  
 local function drawFooter()
-    term.setBackgroundColor(colors.green)
-    term.setTextColor(colors.black)
+    term.setBackgroundColor(footerBackGroundColor)
+    term.setTextColor(footerTextColor)
  
     term.setCursorPos(1, screenHeight)
-    term.setBackgroundColor(colors.white)
  
     -- If this is somehow possible with the tape mod api
     if currentSong == 0 then
@@ -292,18 +317,19 @@ local function drawFooter()
          term.write("Stop")
     end
  
-    term.setCursorPos(screenWidth / 2 - 4, screenHeight)
+    term.setCursorPos(halfScreen - 4, screenHeight)
  
     term.write("Shuffle")
 end
  
 local function drawGUI()
+    drawHeader()
+
     while true do
-        drawHeader()
         drawMusicList()
         drawFooter()
         checkInput()
     end
 end
- 
+
 drawGUI()
