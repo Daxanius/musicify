@@ -229,6 +229,16 @@ else
 end
  
 -- VISUAL LAYER --
+
+local function secondsToClock(time)
+    if seconds <= 0 then
+        return "00:00:00";
+    else
+    mins = string.format("%02.f", math.floor(time/60));
+    secs = string.format("%02.f", math.floor(seconds - mins *60));
+    return ..mins..":"..secs
+    end
+end
  
 local function checkInput()
     local event, key = os.pullEvent("key")
@@ -267,6 +277,8 @@ local function drawMusicList()
     
     term.setCursorPos(trackRowPosition, 2)
     term.write("Track")
+    term.setCursorPos(timeRowPosition, 2)
+    term.write("Duration")
     term.setCursorPos(songRowPosition, 2)
     term.write("Name")
     term.setCursorPos(authorRowPosition, 2)
@@ -293,7 +305,7 @@ local function drawMusicList()
             term.write(track)
 
             term.setCursorPos(timeRowPosition, i + 2)
-            term.write(index.songs[track].time)
+            term.write(secondsToClock(index.songs[track].time))
 
             term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
