@@ -1,11 +1,16 @@
+-- VARIABLES --
+
 local indexURL = "https://raw.githubusercontent.com/RubenHetKonijn/computronics-songs/main/index.json?cb=" .. os.epoch("utc")
 
+local applicationName = "Musicify"
 local version = 0.2
 
 local args = {...}
 local musicify = {}
 
 local tape = peripheral.find("tape_drive")
+
+-- BUSINESS LAYER --
 
 if not tape then
     print("ERROR: Tapedrive not found")
@@ -199,3 +204,25 @@ else
 end
 
 return musicify
+
+-- VISUAL LAYER --
+
+local function drawHeader()
+    term.setBackgroundColor(color.green)
+    term.setTextColor(color.black)
+    term.clear()
+    print(applicationName)
+end
+
+local function drawMusic() {
+    for i in pairs(index.songs) do
+        if i < screenHeight -1 then
+            print(index.songs[i].name)
+        end
+    end
+}
+
+local function drawGUI()
+    drawHeader()
+    drawMusic()
+end
