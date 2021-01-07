@@ -35,6 +35,7 @@ local halfScreen = screenWidth / 2
  
 local currentSong = 0
 local selection = 0
+local textScroll = 0
 local scroll = 0
  
 -- BUSINESS LAYER --
@@ -312,6 +313,8 @@ local function drawMusicList()
             term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
+            elseif selection - scroll == i or track == currentSong
+                term.write(string.sub(index.songs[track].name, textScroll, 12) .. '...')
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
@@ -319,7 +322,9 @@ local function drawMusicList()
             term.setCursorPos(authorRowPosition, i + 2)
             if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
-            else 
+            elseif selection - scroll == i or track == currentSong
+                term.write(string.sub(index.songs[track].author, textScroll, 9) .. '...')
+            else
                 term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
         else
@@ -352,6 +357,8 @@ local function drawGUI()
         drawMusicList()
         drawFooter()
         checkInput()
+
+        textScroll = textScroll +1
     end
 end
 
