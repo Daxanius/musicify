@@ -32,6 +32,8 @@ local musicify = {}
 local tape = peripheral.find("tape_drive")
 local screenWidth, screenHeight = term.getSize()
 local halfScreen = screenWidth / 2
+
+local textScrollSlow = 100
  
 local currentSong = 0
 local selection = 0
@@ -313,8 +315,10 @@ local function drawMusicList()
             term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
-            elseif selection - scroll == i or track == currentSong
-                term.write(string.sub(index.songs[track].name, textScroll, 12) .. '...')
+            elseif selection - scroll == i or track == currentSong then
+                if textScroll < str.len(index.songs[track].name) then
+                    term.write(string.sub(index.songs[track].name, textScroll, textScroll + 12) .. '...')
+                end
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
@@ -322,8 +326,10 @@ local function drawMusicList()
             term.setCursorPos(authorRowPosition, i + 2)
             if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
-            elseif selection - scroll == i or track == currentSong
-                term.write(string.sub(index.songs[track].author, textScroll, 9) .. '...')
+            elseif selection - scroll == i or track == currentSong then
+                if textSroll < string.len(index.songs[track].author) then
+                    term.write(string.sub(index.songs[track].author, textScroll, textScroll + 9) .. '...')
+                end
             else
                 term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
@@ -350,15 +356,24 @@ local function drawFooter()
  
     term.write("Shuffle")
 end
+
+local function scrollText()
+    coroutine.yield(textScrollSlow)
+    textScroll = textScroll +1
+
+    if textScroll > 30 then 
+        textScroll = 0
+    end
+end
  
 local function drawGUI()
+    local timer = coroutine.create(scrollText())
+
     while true do
         drawHeader()
         drawMusicList()
         drawFooter()
         checkInput()
-
-        textScroll = textScroll +1
     end
 end
 
