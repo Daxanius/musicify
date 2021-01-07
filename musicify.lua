@@ -1,22 +1,26 @@
 -- VARIABLES --
-
+ 
 local indexURL = "https://raw.githubusercontent.com/RubenHetKonijn/computronics-songs/main/index.json?cb=" .. os.epoch("utc")
-
+ 
 local applicationName = "Musicify"
 local version = 0.2
-
+ 
 local args = {...}
 local musicify = {}
-
+ 
 local tape = peripheral.find("tape_drive")
-local screenHeight, screenWidth = term.getSize()
-
+local screenWidth, screenHeight = term.getSize()
+ 
+local currentSong = 0
+local selection = 0
+local scroll = 0
+ 
 -- BUSINESS LAYER --
-
+ 
 if not tape then
     print("ERROR: Tapedrive not found")
 end
-
+ 
 local handle = http.get(indexURL)
 local indexJSON = handle.readAll()
 handle.close()
@@ -25,7 +29,7 @@ if not index then
     print("ERROR: The index is malformed.")
     return
 end
-
+ 
 local function getSongID(songname)
 for i in pairs(index.songs) do
         if index.songs[i].name == songname then
@@ -33,7 +37,7 @@ for i in pairs(index.songs) do
         end
     end
 end
-
+ 
 local function wipe()
     local k = tape.getSize()
     tape.stop()
@@ -47,26 +51,26 @@ local function wipe()
     tape.seek(-k)
     tape.seek(-90000)
 end
-
+ 
 local function play(songID)
     print("Playing " .. getSongID(songID.name) .. " | " .. songID.author .. " - " .. songID.name)
     wipe()
     tape.stop()
     tape.seek(-tape.getSize()) -- go back to the start
-
+ 
     local h = http.get(songID.file, nil, true) -- write in binary mode
     tape.write(h.readAll()) -- that's it
     h.close()
-
+ 
     tape.seek(-tape.getSize()) -- back to start again
-
+ 
     tape.setSpeed(songID.speed)
     while tape.getState() ~= "STOPPED" do
       sleep(1)
     end
     tape.play()
 end
-
+ 
 local function update()
     local s = shell.getRunningProgram()
     handle = http.get("https://raw.githubusercontent.com/RubenHetKonijn/musicify/main/musicify.lua")
@@ -82,13 +86,13 @@ local function update()
         return
     end
 end
-
+ 
 if version < index.latestVersion then
     print("Client outdated, Updating Musicify.") -- Update check
     update()
     return
 end
-
+ 
 musicify.help = function (arguments)
     print([[
 Usage: <action> [arguments]
@@ -102,17 +106,17 @@ musicify
     Update     -- Updates musicify
 ]])
 end
-
+ 
 musicify.update = function (arguments)
     print("Updating musicify, please hold on.")
     update()
 end
-
+ 
 musicify.stop = function (arguments)
     print("Stopping.")
     tape.stop()
 end
-
+ 
 musicify.list = function (arguments)
     print("Format: `ID | Author - Name")
     for i in pairs(index.songs) do
@@ -120,7 +124,7 @@ musicify.list = function (arguments)
     end
     print("(Use Mildly Better Shell if you want to scroll through the list!)")
 end
-
+ 
 musicify.shuffle = function (arguments)
     local from = arguments[1] or 1
     local to = arguments[2] or #index.songs
@@ -132,13 +136,13 @@ musicify.shuffle = function (arguments)
         print("Currently in shuffle mode, press <CTRL>+T to exit. Use <Enter> to skip songs")
         local ranNum = math.random(from, to)
         play(index.songs[ranNum])
-
+ 
         -- Wait till the end of the song
-
+ 
         local function songLengthWait()
             sleep(index.songs[ranNum].time)
         end
-
+ 
         local function keyboardWait()
             while true do
                 local event, key = os.pullEvent("key")
@@ -148,11 +152,11 @@ musicify.shuffle = function (arguments)
                 end
             end
         end
-
+ 
         parallel.waitForAny(songLengthWait,keyboardWait)
     end
 end
-
+ 
 musicify.volume = function (arguments)
     if not arguments[1] or not tonumber(arguments[1]) or tonumber(arguments[1])>100 or tonumber(arguments[1]) < 1 then
         print("Please specify a valid volume level between 0-100")
@@ -160,7 +164,7 @@ musicify.volume = function (arguments)
     end
     tape.setVolume(arguments[1] / 100)
 end
-
+ 
 musicify.play = function (arguments)
     if not arguments then
         print("Resuming playback...")
@@ -177,12 +181,12 @@ musicify.play = function (arguments)
     play(index.songs[tonumber(arguments[1])])
     tape.play()
 end
-
+ 
 musicify.info = function (arguments)
     print("Current version: " .. version)
     print("Latest version: " .. index.latestVersion)
 end
-
+ 
 musicify.loop = function (arguments)
     if tostring(arguments[1]) and not tonumber(arguments[1]) then
         print("ERROR: Please specify a song ID")
@@ -193,71 +197,113 @@ musicify.loop = function (arguments)
     sleep(index.songs[tonumber(arguments[1])].time)
     end
 end
-
+ 
 command = table.remove(args, 1)
-
+ 
 if command == "musicify" then
-    drawGUI()
+    return musify
 elseif not command then
-    print("Please provide a valid command. For usage, use `musicify help`.")
+    -- print("Please provide a valid command. For usage, use `musicify help`.")
 else
     musicify[command](args)
 end
-
-drawGUI()
-
+ 
 -- VISUAL LAYER --
-
+ 
+local function checkInput()
+    local event, key = os.pullEvent("key")
+    
+    if key == 208 and selection < #index.songs then
+        if selection - scroll >= screenHeight -3 then
+            scroll = scroll +1
+        end
+        
+        selection = selection +1
+    elseif key == 200 and selection > 0 then
+        if selection - scroll <= 1 and scroll > 0 then
+            scroll = scroll -1
+        end
+    
+        selection = selection -1
+    elseif key == 28 then
+        play(index.songs[selection])
+        currentSong = selection
+    end
+end
+ 
 local function drawHeader()
-    term.setBackgroundColor(color.green)
-    term.setTextColor(color.black)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.green)
     term.clear()
-
+    term.setCursorPos((screenWidth / 2) - (string.len(applicationName) / 2),1)
+ 
     print(applicationName)
 end
-
+ 
 local function drawMusicList()
-    term.setBackgroundColor(color.green)
-    term.setTextColor(color.gray)
-
-    print("Name")
-
-    term.setTextColor(color.white)
-
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.yellow)
+    
+    term.write("Track")
+    term.setCursorPos(screenWidth / 2 - 14, 2)
+    term.write("name")
+    term.setCursorPos(screenWidth / 2 + 6, 2)
+    term.write("Author")
+ 
+    term.setTextColor(colors.white)
+ 
     for i in pairs(index.songs) do
         if i < screenHeight -2 then
-            if strlen(index.songs[i].name) < screenWidth -1 then
-                print(index.songs[i].name)
+            term.setCursorPos(1, i +2)
+            
+            -- Change the color of the selectoins
+            if selection - scroll == i then
+                term.setBackgroundColor(colors.blue)
+            elseif i + scroll == currentSong then
+                term.setBackgroundColor(colors.green)
             else
-                print(strsub(index.songs[i].name, 0, screenWidth -4) .. '...')
+                term.setBackgroundColor(colors.black)
             end
+            
+            -- if string.len(index.songs[i + scroll].name) < screenWidth then
+                term.write(i + scroll)
+                term.setCursorPos(screenWidth / 2 - 14, i + 2)
+                term.write(index.songs[i + scroll].name)
+                term.setCursorPos(screenWidth / 2 + 6, i + 2)
+                term.write(index.songs[i + scroll].author)
+            -- else
+                -- term.write(string.sub(index.songs[i + scroll].name, 0, screenWidth -4) .. '...')
+            -- end
         end
     end
 end
-
+ 
 local function drawFooter()
-    term.setBackgroundColor(color.gray)
-    term.setTextColor(color.white)
-    term.clear()
-
-    term.setCursorPos(screenHeight -1, 1)
-
+    term.setBackgroundColor(colors.green)
+    term.setTextColor(colors.black)
+ 
+    term.setCursorPos(1, screenHeight)
+    term.setBackgroundColor(colors.white)
+ 
     -- If this is somehow possible with the tape mod api
-    if !tape.isPlaying() then
-        print("Play")
+    if currentSong == 0 then
+        term.write("Play")
     else
-        print("Stop")
+         term.write("Stop")
     end
-
-    term.setCursorPos(screenHeight -1, 6)
-
-    print("Shuffle")
+ 
+    term.setCursorPos(screenWidth / 2 - 4, screenHeight)
+ 
+    term.write("Shuffle")
 end
-
+ 
 local function drawGUI()
     while true do
         drawHeader()
-        drawMusic()
+        drawMusicList()
         drawFooter()
+        checkInput()
     end
 end
+ 
+drawGUI()
