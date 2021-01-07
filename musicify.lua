@@ -211,16 +211,43 @@ local function drawHeader()
     term.setBackgroundColor(color.green)
     term.setTextColor(color.black)
     term.clear()
+
     print(applicationName)
 end
 
-local function drawMusic() {
+local function drawMusic()
+    term.setBackgroundColor(color.green)
+    term.setTextColor(color.gray)
+
+    print("Name")
+
+    term.setTextColor(color.white)
+
     for i in pairs(index.songs) do
         if i < screenHeight -1 then
-            print(index.songs[i].name)
+            if strlen(index.songs[i].name) < screenWidth -1 then
+                print(index.songs[i].name)
+            else
+                print(strsub(index.songs[i].name, 0, screenWidth -4) .. '...')
+            end
         end
     end
-}
+end
+
+local function drawFooter()
+    term.setBackgroundColor(color.gray)
+    term.setTextColor(color.white)
+    term.clear()
+
+    term.setCursorPos(screenHeight, 1)
+
+    -- If this is somehow possible with the tape mod api
+    if !tape.isPlaying() then
+        print("Play")
+    else
+        print("Stop")
+    end
+end
 
 local function drawGUI()
     drawHeader()
