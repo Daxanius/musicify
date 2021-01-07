@@ -236,7 +236,7 @@ local function secondsToClock(seconds)
     if seconds <= 0 then
         return "00:00:00";
     else
-    mins = string.format("%02.f", math.floor(time/60));
+    mins = string.format("%02.f", math.floor(seconds/60));
     secs = string.format("%02.f", math.floor(seconds - mins *60));
     return mins..":"..secs
     end
