@@ -244,23 +244,25 @@ local function secondsToClock(seconds)
 end
  
 local function checkInput()
-    local event, key = os.pullEvent("key")
+    local event, key = os.pullEvent()
     
-    if key == 208 and selection < #index.songs then
-        if selection - scroll >= screenHeight -3 then
-            scroll = scroll +1
-        end
+    if event == "key" then
+        if key == 208 and selection < #index.songs then
+            if selection - scroll >= screenHeight -3 then
+                scroll = scroll +1
+            end
+            
+            selection = selection +1
+        elseif key == 200 and selection > 0 then
+            if selection - scroll <= 1 and scroll > 0 then
+                scroll = scroll -1
+            end
         
-        selection = selection +1
-    elseif key == 200 and selection > 0 then
-        if selection - scroll <= 1 and scroll > 0 then
-            scroll = scroll -1
+            selection = selection -1
+        elseif key == 28 then
+            play(index.songs[selection])
+            currentSong = selection
         end
-    
-        selection = selection -1
-    elseif key == 28 then
-        play(index.songs[selection])
-        currentSong = selection
     end
 end
  
