@@ -364,7 +364,7 @@ local function drawGUI()
 
         textScroll = textScroll +1
         
-        if textScroll > 30
+        if textScroll > 30 then
             textScroll = 0
         end
     end
