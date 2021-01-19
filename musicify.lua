@@ -36,12 +36,18 @@ local halfScreen = screenWidth / 2
 local scroll = 0
 
 local selection = 0
-local selectionTextScroll = 0
-local maxSelectionTextScroll = 0
+local selectionNameScroll = 0
+local maxSelectionNameScroll = 0
+
+local selectionAuthorScroll = 0
+local maxSelectionAuthorScroll = 0
 
 local currentSong = 0
-local playingTextScroll = 0
-local maxPlayingTextScroll = 0
+local playingNameScroll = 0
+local maxPlayingNameScroll = 0
+
+local playingAuthorScroll = 0
+local maxPlayingAuhtorScroll = 0
  
 -- BUSINESS LAYER --
  
@@ -301,9 +307,9 @@ local function drawMusicList()
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
             elseif selection - scroll == i then
-                term.write(string.sub(index.songs[track].name, selectionTextScroll +1, selectionTextScroll + 12) .. '...')
+                term.write(string.sub(index.songs[track].name, selectionNameScroll +1, selectionNameScroll + 12) .. '...')
             elseif track == currentSong then 
-                term.write(string.sub(index.songs[track].name, playingTextScroll +1, playingTextScroll + 12) .. '...')
+                term.write(string.sub(index.songs[track].name, playingNameScroll +1, playingNameScroll + 12) .. '...')
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
@@ -312,9 +318,9 @@ local function drawMusicList()
             if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
             elseif selection - scroll == i then
-                term.write(string.sub(index.songs[track].author, selectionTextScroll +1, selectionTextScroll + 9) .. '...')
+                term.write(string.sub(index.songs[track].author, selectionAuthorScroll +1, selectionAuthorScroll + 9) .. '...')
             elseif track == currentSong then 
-                term.write(string.sub(index.songs[track].author, playingTextScroll +1, playingTextScroll + 9) .. '...')
+                term.write(string.sub(index.songs[track].author, playingAuthorScroll +1, playingAuthorScroll + 9) .. '...')
             else
                 term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
@@ -354,8 +360,10 @@ local function checkInput()
                 end
             
                 selection = selection +1
-                maxSelectionTextScroll = string.len(index.songs[selection].name) -13 
-                selectionTextScroll = 0
+                maxSelectionNameScroll = string.len(index.songs[selection].name) -13 
+                maxSelectionAuthorlScroll = string.len(index.song[selection].author) -10
+                selectionNameScroll = 0
+                selectionAuthorScroll = 0
             
             elseif key == 200 and selection > 1 then
                 if selection - scroll <= 1 and scroll > 0 then
@@ -363,15 +371,19 @@ local function checkInput()
                 end
         
                 selection = selection -1
-                maxSelectionTextScroll = string.len(index.songs[selection].name) -13
-                selectionTextScroll = 0
+                maxSelectionNameScroll = string.len(index.songs[selection].name) -13
+                maxSelectionAuthorScroll = string.len(index.song[selection].author) -10
+                selectionNameScroll = 0
+                selectionAuthorScroll = 0
             
             elseif key == 28 then
                 play(index.songs[selection])
                 currentSong = selection
 
-                maxPlayingTextScroll = string.len(index.songs[currentSong].name) -13
-                playingTextScroll = 0
+                maxPlayingNameScroll = string.len(index.songs[currentSong].name) -13
+                maxPlayingAuthorScroll =  string.len(index.songs[currentSong].author) -10
+                playingNameScroll = 0
+                playingAuthorScroll = 0
             end
         end
     end
@@ -379,15 +391,26 @@ end
 
 local function tick()
     while true do
-        selectionTextScroll = selectionTextScroll +1
-        playingTextScroll = playingTextScroll +1
+        selectionNameScroll = selectionNameScroll +1
+        selectionAuthorScroll = selectionAuthorScroll +1
+
+        playingNameScroll = playingNameScroll +1
+        playingAuthorScroll = playingAuthorScroll +1
         
-        if selectionTextScroll > maxSelectionTextScroll then
-            selectionTextScroll = 0
+        if selectionNameScroll > maxSelectionNameScroll then
+            selectionNameScroll = 0
         end
 
-        if playingTextScroll > maxPlayingTextScroll then
-            playingTextScroll = 0
+        if selectionAuthorScroll > maxSelectionAuthorScroll then 
+            selectionAuthorScroll = 0
+        end
+
+        if playingNameScroll > maxPlayingNameScroll then
+            playingNameScroll = 0
+        end
+
+        if playingAuthorScroll > maxplayingAuthorScroll then 
+            playingAuthorScroll = 0
         end
 
         sleep(0.4)
