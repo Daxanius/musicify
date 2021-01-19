@@ -81,7 +81,6 @@ local function wipe()
 end
  
 local function play(songID)
-    currentSong = songID
     print("Playing " .. getSongID(songID.name) .. " | " .. songID.author .. " - " .. songID.name)
     wipe()
     tape.stop()
@@ -369,6 +368,7 @@ local function checkInput()
             
             elseif key == 28 then
                 play(index.songs[selection])
+                currentSong = selection
 
                 maxPlayingTextScroll = string.len(index.songs[currentSong].name) -13
                 playingTextScroll = 0
