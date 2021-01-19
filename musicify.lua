@@ -47,7 +47,7 @@ local playingNameScroll = 0
 local maxPlayingNameScroll = 0
 
 local playingAuthorScroll = 0
-local maxPlayingAuhtorScroll = 0
+local maxPlayingAuthorScroll = 0
  
 -- BUSINESS LAYER --
  
