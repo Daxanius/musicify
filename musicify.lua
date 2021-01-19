@@ -4,39 +4,44 @@ local indexURL = "https://raw.githubusercontent.com/RubenHetKonijn/computronics-
  
 local applicationName = "Musicify"
 local version = 0.2
-
+ 
 local backGroundColor = colors.black
-
+ 
 local headerTextColor = colors.green
 local headerOffset = 0
-
+ 
 local tableTextColor = colors.yellow
 local musicTextColor = colors.white
-
+ 
 local selectedColor = colors.blue
 local playingColor = colors.green
-
+ 
 local footerBackGroundColor = colors.white
 local footerTextColor = colors.black
-
+ 
 local parentRowPosition = 2
-
+ 
 local trackRowPosition = parentRowPosition + 1
 local songRowPosition = parentRowPosition + 8
 local authorRowPosition = parentRowPosition + 25
 local timeRowPosition = parentRowPosition + 40
-
+ 
 local args = {...}
 local musicify = {}
  
 local tape = peripheral.find("tape_drive")
 local screenWidth, screenHeight = term.getSize()
 local halfScreen = screenWidth / 2
- 
-local currentSong = 0
-local selection = 0
-local textScroll = 0
+
 local scroll = 0
+
+local selection = 0
+local selectionTextScroll = 0
+local maxSelectionTextScroll = 0
+
+local currentSong = 0
+local playingTextScroll = 0
+local maxPlayingTextScroll = 0
  
 -- BUSINESS LAYER --
  
@@ -76,6 +81,7 @@ local function wipe()
 end
  
 local function play(songID)
+    currentSong = songID
     print("Playing " .. getSongID(songID.name) .. " | " .. songID.author .. " - " .. songID.name)
     wipe()
     tape.stop()
@@ -224,7 +230,7 @@ end
 command = table.remove(args, 1)
  
 if command == "musicify" then
-    drawGUI()
+    parallel.waitForAny(drawGUI,checkInput,tick)
 elseif not command then
     print("Please provide a valid command. For usage, use `musicify help`.")
 else
@@ -232,35 +238,14 @@ else
 end
  
 -- VISUAL LAYER --
-
+ 
 local function secondsToClock(seconds)
     if seconds <= 0 then
         return "00:00:00";
     else
-    mins = string.format("%02.f", math.floor(seconds/60));
-    secs = string.format("%02.f", math.floor(seconds - mins *60));
-    return mins..":"..secs
-    end
-end
- 
-local function checkInput()
-    local event, key = os.pullEvent("key")
-    
-    if key == 208 and selection < #index.songs then
-        if selection - scroll >= screenHeight -3 then
-            scroll = scroll +1
-        end
-        
-        selection = selection +1
-    elseif key == 200 and selection > 0 then
-        if selection - scroll <= 1 and scroll > 0 then
-            scroll = scroll -1
-        end
-    
-        selection = selection -1
-    elseif key == 28 then
-        play(index.songs[selection])
-        currentSong = selection
+        mins = string.format("%02.f", math.floor(seconds/60));
+        secs = string.format("%02.f", math.floor(seconds - mins *60));
+        return mins..":"..secs
     end
 end
  
@@ -268,7 +253,7 @@ local function drawHeader()
     term.setBackgroundColor(backGroundColor)
     term.setTextColor(headerTextColor)
     term.clear()
-
+ 
     term.setCursorPos(halfScreen - (string.len(applicationName) / 2) + headerOffset, 1)
  
     print(applicationName)
@@ -280,10 +265,13 @@ local function drawMusicList()
     
     term.setCursorPos(trackRowPosition, 2)
     term.write("Track")
+
     term.setCursorPos(timeRowPosition, 2)
     term.write("Duration")
+
     term.setCursorPos(songRowPosition, 2)
     term.write("Name")
+    
     term.setCursorPos(authorRowPosition, 2)
     term.write("Author")
  
@@ -292,7 +280,7 @@ local function drawMusicList()
     for i in pairs(index.songs) do
         if i < screenHeight -2 then
             local track = i + scroll
-
+ 
             term.setCursorPos(1, i +2)
             
             -- Change the color of the selectoins
@@ -306,28 +294,24 @@ local function drawMusicList()
             
             term.setCursorPos(trackRowPosition, i + 2)
             term.write(track)
-
+ 
             term.setCursorPos(timeRowPosition, i + 2)
             term.write(secondsToClock(index.songs[track].time))
-
+ 
             term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
             elseif selection - scroll == i or track == currentSong then
-                -- if string.len(string.sub(index.songs[track].name, textScroll, textScroll + 12)) < 12 then
-                    term.write(string.sub(index.songs[track].name, textScroll, textScroll + 12) .. '...')
-                -- end
+                term.write(string.sub(index.songs[track].name, textScroll +1, textScroll + 12) .. '...')
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
-
+ 
             term.setCursorPos(authorRowPosition, i + 2)
             if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
             elseif selection - scroll == i or track == currentSong then
-                -- if string.len(string.sub(index.songs[track].author, textScroll, textScroll + 9)) > 9 then
-                    term.write(string.sub(index.songs[track].author, textScroll, textScroll + 9) .. '...')
-                -- end
+                term.write(string.sub(index.songs[track].author, textScroll +1, textScroll + 9) .. '...')
             else
                 term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
@@ -343,7 +327,6 @@ local function drawFooter()
  
     term.setCursorPos(1, screenHeight)
  
-    -- If this is somehow possible with the tape mod api
     if currentSong == 0 then
         term.write("Play")
     else
@@ -354,22 +337,66 @@ local function drawFooter()
  
     term.write("Shuffle")
 end
+
+-- GUI Logic
+ 
+local function checkInput()
+    while true do
+        local event, key = os.pullEvent()
+    
+        if event == "key" then
+            if key == 208 and selection < #index.songs then
+                if selection - scroll >= screenHeight -3 then
+                    scroll = scroll +1
+                end
+            
+                selection = selection +1
+                maxSelectionTextScroll = string.len(index.songs[selection].name) -13 
+                selectionTextScroll = 0
+            
+            elseif key == 200 and selection > 1 then
+                if selection - scroll <= 1 and scroll > 0 then
+                    scroll = scroll -1
+                end
+        
+                selection = selection -1
+                maxSelectionTextScroll = string.len(index.songs[selection].name) -13
+                selectionTextScroll = 0
+            
+            elseif key == 28 then
+                play(index.songs[selection])
+
+                maxPlayingTextScroll = string.len(index.songs[currentSong].name) -13
+                playingTextScroll = 0
+            end
+        end
+    end
+end
+
+local function tick()
+    while true do
+        selectionTextScroll = selectionTextScroll +1
+        playingTextScroll = playingTextScroll +1
+        
+        if selectionTextScroll > maxSelectionTextScroll then
+            selectionTextScroll = 0
+        end
+
+        if playingTextScroll > maxPlayingTextScroll then
+            playingTextScroll = 0
+        end
+
+        sleep(0.4)
+    end
+end
  
 local function drawGUI()
-    drawHeader()
-    drawMusicList()
-    drawFooter()
-    checkInput()
-
-    textScroll = textScroll +1
-    
-    if textScroll > 30 then
-        textScroll = 0
+    while true do
+        drawHeader()
+        drawMusicList()
+        drawFooter()
+        sleep()
     end
-
-    sleep(2)
 end
-
-while true do
-    parallel.waitForAny(drawGUI,checkInput())
-end
+ 
+parallel.waitForAny(drawGUI,checkInput,tick)
