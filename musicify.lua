@@ -409,7 +409,7 @@ local function tick()
             playingNameScroll = 0
         end
 
-        if playingAuthorScroll > maxplayingAuthorScroll then 
+        if playingAuthorScroll > maxPlayingAuthorScroll then 
             playingAuthorScroll = 0
         end
 
