@@ -301,8 +301,10 @@ local function drawMusicList()
             term.setCursorPos(songRowPosition, i + 2)
             if string.len(index.songs[track].name) < 15 then
                 term.write(index.songs[track].name)
-            elseif selection - scroll == i or track == currentSong then
-                term.write(string.sub(index.songs[track].name, textScroll +1, textScroll + 12) .. '...')
+            elseif selection - scroll == i then
+                term.write(string.sub(index.songs[track].name, selectionTextScroll +1, selectionTextScroll + 12) .. '...')
+            elseif track == currentSong then 
+                term.write(string.sub(index.songs[track].name, playingTextScroll +1, playingTextScroll + 12) .. '...')
             else
                 term.write(string.sub(index.songs[track].name, 0, 12) .. '...')
             end
@@ -310,8 +312,10 @@ local function drawMusicList()
             term.setCursorPos(authorRowPosition, i + 2)
             if string.len(index.songs[track].author) < 12 then
                 term.write(index.songs[track].author)
-            elseif selection - scroll == i or track == currentSong then
-                term.write(string.sub(index.songs[track].author, textScroll +1, textScroll + 9) .. '...')
+            elseif selection - scroll == i then
+                term.write(string.sub(index.songs[track].author, selectionTextScroll +1, selectionTextScroll + 9) .. '...')
+            elseif track == currentSong then 
+                term.write(string.sub(index.songs[track].author, playingTextScroll +1, playingTextScroll + 9) .. '...')
             else
                 term.write(string.sub(index.songs[track].author, 0, 9) .. '...')
             end
